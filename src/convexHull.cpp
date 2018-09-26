@@ -7,7 +7,6 @@ ConvexHull::ConvexHull(const sensor_msgs::LaserScan::ConstPtr &msg,int startinde
   tmp = startindex;
 };
 
-
 /*最小2乗法でy = tan(a)*x + bに近似　aは[rad] */
 void ConvexHull::leastSquaresMethod(double* a,double* b){
   for(;tmp<=endIndex;tmp++){
@@ -51,10 +50,12 @@ void ConvexHull::renew(int startIndex,int endIndex){
   tmp = startIndex;
 }
 
-double ConvexHull::hokuyoCos(int index){
+/*
+const double ConvexHull::hokuyoCos(int index){
   return std::cos(M_PI/2 - (ANGLE_MIN + ANGLE_INCREMENT*index)); 
 }
   
-double ConvexHull::hokuyoSin(int index){
+const double ConvexHull::hokuyoSin(int index){
   return std::sin(M_PI/2 - (ANGLE_MIN + ANGLE_INCREMENT*index));
 }
+*/

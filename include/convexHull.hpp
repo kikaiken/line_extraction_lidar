@@ -5,12 +5,12 @@
 #include "sensor_msgs/LaserScan.h"
 #include <vector>
 #include <cmath>
+#include "hokuyo_functions.hpp"
 
 class ConvexHull{
 
   /*lidarに関する定数*/
-  const double PI = 3.141592;
-  const float ANGLE_MIN =-2.35619,ANGLE_INCREMENT = 0.00436332;
+  //const float ANGLE_MIN =-2.35619,ANGLE_INCREMENT = 0.00436332;
 
   
   int startIndex,endIndex;
@@ -31,10 +31,11 @@ public:
   void add();
 
   void renew(int startindex,int endIndex);
+  /*
+  const double hokuyoCos(int index);
 
-  double hokuyoCos(int index);
-
-  double hokuyoSin(int index);
+  const double hokuyoSin(int index);
+  */
 };
 
 #endif
