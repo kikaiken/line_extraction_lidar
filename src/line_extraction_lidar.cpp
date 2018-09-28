@@ -8,11 +8,15 @@
 
 void lidar_callback(const sensor_msgs::LaserScan::ConstPtr &msg);
 
-ros::NodeHandle nh;
-ros::Publisher marker_pub = nh.advertise<visualization_msgs::Marker>("visualization_marker", 1);
+bool flag = false;/**/
 
 int main(int argc,char **argv){
+
   ros::init(argc,argv,"line_extraction_lidar");
+  ros::NodeHandle nh;
+  ros::Publisher marker_pub = nh.advertise<visualization_msgs::Marker>("visualization_marker", 10);
+
+  
   
   ros::Subscriber lidar = nh.subscribe("scan",1,lidar_callback);
   ros::Rate loop_rate(1);
@@ -32,7 +36,11 @@ void lidar_callback(const sensor_msgs::LaserScan::ConstPtr &msg){
     ROS_INFO("URG data is empty");
     return;
   }
+ 
   
+  ros::NodeHandle nh;
+  ros::Publisher marker_pub = nh.advertise<visualization_msgs::Marker>("visualization_marker", 10);
+
   const double DIS_THRESHOLD = 0.3;/*要検証*/
   std::vector<int> dp{0};
   double width;
@@ -47,11 +55,11 @@ void lidar_callback(const sensor_msgs::LaserScan::ConstPtr &msg){
     } 
   }
   dp.push_back(1079);/*最後の点を追加*/
-
   
-  /*ここから描画*/
-  /*LiDARから得た点群を描画*/
-  
+  ROS_INFO("get");
+  /*ここから描画*/  
+  /*LiDARから得た点群を描画*/  
+ 
   visualization_msgs::Marker points;
   points.header.frame_id = "/my_frame";
   points.header.stamp = ros::Time::now();
@@ -59,8 +67,10 @@ void lidar_callback(const sensor_msgs::LaserScan::ConstPtr &msg){
   points.id = 0;
   points.type = visualization_msgs::Marker::POINTS;
   points.action = visualization_msgs::Marker::ADD;
-  points.scale.x = 0.1;
-  points.scale.y = 0.1;
+  points.pose.orientation.w = 1.0;
+  points.scale.x = 0.01;
+  points.scale.y = 0.01;
+  points.lifetime = ros::Duration(0);
   //points are blue
   points.color.b = 1.0;
   points.color.a = 1.0;
@@ -74,4 +84,8 @@ void lidar_callback(const sensor_msgs::LaserScan::ConstPtr &msg){
   }
   marker_pub.publish(points);
   
+  /*直線の描画*/
+  visualization_msgs::Marker line_strip;
+  line_strip.ns = "lidar_data";
 }
+
