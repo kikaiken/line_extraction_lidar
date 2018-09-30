@@ -16,8 +16,9 @@ void ConvexHull::leastSquaresMethod(double* a,double* b){
     xSquared += msg->ranges[tmp]*msg->ranges[tmp]*hokuyoCos(tmp)*hokuyoCos(tmp);
   }
 
-  int n = endIndex - startIndex + 1;
+  int n = endIndex - startIndex + 1;  
   *a = std::atan((n*xy - sumX*sumY)/(n*xSquared - sumX*sumX));
+  //*a = std::atan2((n*xy - sumX*sumY),(n*xSquared - sumX*sumX));
   *b = (xSquared*sumY - xy*sumX)/(n*xSquared - sumX*sumX);
 }
 
@@ -26,11 +27,12 @@ double ConvexHull::calcWidth(){
   std::vector<double> dis;
   int n= endIndex - startIndex + 1;
   double theta,yIntercept;//y = tan(theta)*x + yInterceptに近似
-  leastSquaresMethod(&theta,&yIntercept);  
+  leastSquaresMethod(&theta,&yIntercept);
   double tmp2 = std::sqrt(1 + std::tan(theta)*std::tan(theta));
   for(int i=0;i<n;i++){
     dis.push_back(std::abs(msg->ranges[i]*(hokuyoSin(i) - hokuyoCos(i)*std::tan(theta)))/tmp2);//直線と点との距離
   }
+  
   return *std::max_element(dis.begin(),dis.end()) - *std::min_element(dis.begin(),dis.end());      
 }
 
@@ -49,12 +51,3 @@ void ConvexHull::renew(int startIndex,int endIndex){
   tmp = startIndex;
 }
 
-/*
-const double ConvexHull::hokuyoCos(int index){
-  return std::cos(M_PI/2 - (ANGLE_MIN + ANGLE_INCREMENT*index)); 
-}
-  
-const double ConvexHull::hokuyoSin(int index){
-  return std::sin(M_PI/2 - (ANGLE_MIN + ANGLE_INCREMENT*index));
-}
-*/

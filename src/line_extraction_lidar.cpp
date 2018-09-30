@@ -17,7 +17,7 @@ int main(int argc,char **argv){
   ros::Publisher marker_pub = nh.advertise<visualization_msgs::Marker>("visualization_marker", 10);
 
   ros::Subscriber lidar = nh.subscribe("scan",1,lidar_callback);
-  ros::Rate loop_rate(1);
+  ros::Rate loop_rate(10);
   
   while(ros::ok()){
     //ROS_INFO("hello world");
@@ -38,19 +38,20 @@ void lidar_callback(const sensor_msgs::LaserScan::ConstPtr &msg){
   ros::NodeHandle nh;
   ros::Publisher marker_pub = nh.advertise<visualization_msgs::Marker>("visualization_marker", 10);
 
-  const double DIS_THRESHOLD = 0.1;/*要検証*/
+  const double DIS_THRESHOLD = 0.20;/*要検証*/
   std::vector<int> dp{0};
   double width;
+
   ConvexHull convexHull(msg,0,1);
   for(int i=2;i<msg->ranges.size()-1;i++){
     convexHull.add();
     width = convexHull.calcWidth();
-
     if(width > DIS_THRESHOLD){
       dp.push_back(i);
       convexHull.renew(i,i+1);
     } 
   }
+
   dp.push_back(1079);/*最後の点を追加*/
   
   ROS_INFO("get");
@@ -90,8 +91,8 @@ void lidar_callback(const sensor_msgs::LaserScan::ConstPtr &msg){
   points2.type = visualization_msgs::Marker::POINTS;
   points2.action = visualization_msgs::Marker::ADD;
   points2.pose.orientation.w = 1.0;
-  points2.scale.x = 0.05;
-  points2.scale.y = 0.05;
+  points2.scale.x = 0.03;
+  points2.scale.y = 0.03;
   points2.lifetime = ros::Duration(0);/*再描画するまで残る*/
   //points are yellow
   points2.color.r = 1.0;
@@ -102,8 +103,9 @@ void lidar_callback(const sensor_msgs::LaserScan::ConstPtr &msg){
     p.x = msg->ranges[dp[i]]*hokuyoCos(dp[i]);
     p.y = msg->ranges[dp[i]]*hokuyoSin(dp[i]);
     points2.points.push_back(p);
-    ROS_INFO_STREAM(p.x << "," << p.y );
+    //ROS_INFO_STREAM(p.x << "," << p.y );
   }
+  
   marker_pub.publish(points2);
 
   ROS_INFO_STREAM("size" << dp.size());
