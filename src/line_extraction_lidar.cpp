@@ -38,15 +38,27 @@ void lidar_callback(const sensor_msgs::LaserScan::ConstPtr &msg){
   ros::NodeHandle nh;
   ros::Publisher marker_pub = nh.advertise<visualization_msgs::Marker>("visualization_marker", 10);
 
-  const double DIS_THRESHOLD = 0.20;/*要検証*/
+  const double DIS_THRESHOLD = 0.15;/*要検証*/
+  //const double EPSILON_THETA = 0.05,EPSILON_Y_INTERCEPT = 0.05;
+    
   std::vector<int> dp{0};
   double width;
-
+   
+  /*DEBUG*/
+  double a,b,preA,preB;
+  
   ConvexHull convexHull(msg,0,1);
   for(int i=2;i<msg->ranges.size()-1;i++){
     convexHull.add();
+    preA = a;
+    preB = b;
     width = convexHull.calcWidth();
-    if(width > DIS_THRESHOLD){
+    convexHull.leastSquaresMethod(&a,&b);
+    
+    if(width > DIS_THRESHOLD){ //&& std::abs(a - preA)>EPSILON_THETA && std::abs(b - preB)>EPSILON_Y_INTERCEPT){
+
+      std::cout << dp.size() <<"," << a << "," << b << std::endl;
+
       dp.push_back(i);
       convexHull.renew(i,i+1);
     } 

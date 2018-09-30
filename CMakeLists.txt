@@ -135,7 +135,7 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/line_extraction_lidar_node.cpp)
 
-add_executable(line_extraction_lidar src/line_extraction_lidar.cpp src/convexHull.cpp  src/hokuyo_functions.cpp)
+add_executable(line_extraction_lidar src/line_extraction_lidar.cpp src/convexHull.cpp  src/hokuyo_functions.cpp src/line.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
