@@ -28,9 +28,10 @@ double ConvexHull::calcWidth(){
   int n= endIndex - startIndex + 1;
   double theta,yIntercept;//y = tan(theta)*x + yInterceptに近似
   leastSquaresMethod(&theta,&yIntercept);
-  double tmp2 = std::sqrt(1 + std::tan(theta)*std::tan(theta));
+ 
   for(int i=0;i<n;i++){
-    dis.push_back(std::abs(msg->ranges[i]*(hokuyoSin(i) - hokuyoCos(i)*std::tan(theta)))/tmp2);//直線と点との距離
+    //dis.push_back(std::abs(msg->ranges[i]*(hokuyoSin(i) - hokuyoCos(i)*std::tan(theta)))/std::sqrt(1 + std::tan(theta)*std::tan(theta)));//直線と点との距離
+    dis.push_back(std::abs(msg->ranges[i]*(hokuyoSin(i)*std::cos(theta) - hokuyoCos(i)*std::sin(theta))));
   }
   
   return *std::max_element(dis.begin(),dis.end()) - *std::min_element(dis.begin(),dis.end());      

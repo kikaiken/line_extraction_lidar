@@ -1,10 +1,11 @@
 #include "ros/ros.h"
 #include "sensor_msgs/LaserScan.h"
 #include <vector>
+#include <list>
 #include <visualization_msgs/Marker.h>
 #include "convexHull.hpp"
 #include "hokuyo_functions.hpp"
-
+#include "line.hpp"
 
 void lidar_callback(const sensor_msgs::LaserScan::ConstPtr &msg);
 
@@ -40,31 +41,32 @@ void lidar_callback(const sensor_msgs::LaserScan::ConstPtr &msg){
 
   const double DIS_THRESHOLD = 0.15;/*要検証*/
   //const double EPSILON_THETA = 0.05,EPSILON_Y_INTERCEPT = 0.05;
-    
+
+  double a,b;
   std::vector<int> dp{0};
   double width;
-   
-  /*DEBUG*/
-  double a,b,preA,preB;
   
+  std::list<Line> lines;/*各線分を格納する*/
+  int startIndex = 0;
   ConvexHull convexHull(msg,0,1);
   for(int i=2;i<msg->ranges.size()-1;i++){
     convexHull.add();
-    preA = a;
-    preB = b;
     width = convexHull.calcWidth();
     convexHull.leastSquaresMethod(&a,&b);
     
-    if(width > DIS_THRESHOLD){ //&& std::abs(a - preA)>EPSILON_THETA && std::abs(b - preB)>EPSILON_Y_INTERCEPT){
-
+    if(width > DIS_THRESHOLD){
       std::cout << dp.size() <<"," << a << "," << b << std::endl;
-
+      lines.push_back(Line(startIndex,i-1,a,b,msg->ranges));
+      startIndex = i;
       dp.push_back(i);
       convexHull.renew(i,i+1);
     } 
   }
 
-  dp.push_back(1079);/*最後の点を追加*/
+  if(dp.back()!=(msg->ranges.size()-1)){
+    dp.push_back(1079);/*最後の点を追加*/
+    lines.push_back(Line(startIndex,msg->ranges.size()-1,a,b,msg->ranges));
+  }
   
   ROS_INFO("get");
 
