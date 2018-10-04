@@ -31,7 +31,7 @@ double ConvexHull::calcWidth(){
  
   for(int i=0;i<n;i++){
     //dis.push_back(std::abs(msg->ranges[i]*(hokuyoSin(i) - hokuyoCos(i)*std::tan(theta)))/std::sqrt(1 + std::tan(theta)*std::tan(theta)));//直線と点との距離
-    dis.push_back(std::abs(msg->ranges[i]*((long double)hokuyoSin(i)*std::cos((long double)theta) - (long double)hokuyoCos(i)*std::sin((long double)theta))));
+    dis.push_back(std::abs(msg->ranges[startIndex + i]*(hokuyoSin(startIndex + i)*std::cos(theta) - hokuyoCos(startIndex + i)*std::sin(theta))));
   }
   
   return *std::max_element(dis.begin(),dis.end()) - *std::min_element(dis.begin(),dis.end());      

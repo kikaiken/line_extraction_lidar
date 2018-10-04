@@ -22,7 +22,7 @@ void Line::merge(Line line){
     startX = line.startX;
      
     double xy=0,sumX=0,sumY=0,xSquared=0;
-    for(int tmp=0;tmp<=endIndex;tmp++){
+    for(int tmp=startIndex;tmp<=endIndex;tmp++){
       xy += ranges[tmp]*ranges[tmp]*hokuyoCos(tmp)*hokuyoSin(tmp);
       sumX += ranges[tmp]*hokuyoCos(tmp);
       sumY += ranges[tmp]*hokuyoSin(tmp);
