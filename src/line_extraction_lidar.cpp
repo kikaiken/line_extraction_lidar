@@ -13,6 +13,7 @@ void mergeLines(std::list<Line>& lines);
 
 void merge(Line& line1,Line& line2);
 
+double radToDeg(double rad);
 
 int main(int argc,char **argv){
 
@@ -21,7 +22,7 @@ int main(int argc,char **argv){
   ros::Publisher marker_pub = nh.advertise<visualization_msgs::Marker>("visualization_marker", 10);
 
   ros::Subscriber lidar = nh.subscribe("scan",1,lidar_callback);
-  ros::Rate loop_rate(1);
+  ros::Rate loop_rate(40);
   
   while(ros::ok()){
     //ROS_INFO("hello world");
@@ -39,17 +40,11 @@ void lidar_callback(const sensor_msgs::LaserScan::ConstPtr &msg){
     return;
   } 
 
-  for(int i=0;i<msg->ranges.size();i++){
-    std::cout << msg->ranges[i] << ",";
-  }
-  std::cout << std::endl;
-
   
   ros::NodeHandle nh;
   ros::Publisher marker_pub = nh.advertise<visualization_msgs::Marker>("visualization_marker", 10);
 
-  const double DIS_THRESHOLD = 0.05;/*要検証*/
-  //const double EPSILON_THETA = 0.05,EPSILON_Y_INTERCEPT = 0.05;
+  const double DIS_THRESHOLD = 0.04;/*要検証*/ 
 
   double a,b;
   std::vector<int> dp{0};
@@ -64,9 +59,7 @@ void lidar_callback(const sensor_msgs::LaserScan::ConstPtr &msg){
     convexHull.leastSquaresMethod(&a,&b);
     
     if(width > DIS_THRESHOLD){
-      //std::cout << dp.size() <<"," << a << "," << b << std::endl;
       lines.push_back(Line(startIndex,i-1,a,b,msg->ranges));
-      //std:: cout << i << "," << lines.end()->dis << std::endl;
       startIndex = i;
       dp.push_back(i);
       convexHull.renew(i,i+1);
@@ -157,6 +150,37 @@ void lidar_callback(const sensor_msgs::LaserScan::ConstPtr &msg){
     p.y = itr->startY;
     points3.points.push_back(p);
   }
+  marker_pub.publish(points3);
+  
+  /*ここから線分の描画*/
+  visualization_msgs::Marker segments;
+  segments.header.frame_id = "/my_frame";
+  segments.header.stamp = ros::Time::now();
+  segments.ns = "detected_segments";
+  segments.id = 1;
+  segments.type = visualization_msgs::Marker::LINE_LIST;
+  segments.action = visualization_msgs::Marker::ADD;
+  segments.pose.orientation.w = 1.0;
+  segments.scale.x = 0.01;
+  segments.scale.y = 0.01;
+  segments.lifetime = ros::Duration(0);/*再描画するまで残る*/
+  //points are green
+  segments.color.g = 1.0;
+  segments.color.a = 1.0;
+
+  for(auto itr=lines.begin();itr!=lines.end();itr++){
+    p.x = itr->startX;
+    p.y = itr->startY;
+    segments.points.push_back(p);
+    p.x = itr->endX;
+    p.y = itr->endY;
+    segments.points.push_back(p);
+  }
+  marker_pub.publish(segments);
+
+  for(auto itr=lines.begin();itr!=lines.end();itr++){
+    std::cout << radToDeg(itr->theta) << "\n";
+  }
   
   ROS_INFO_STREAM("dp size" << dp.size() << "segments size" << lines.size());
 
@@ -179,4 +203,8 @@ void mergeLines(std::list<Line>& lines){
     itr++;
   }
     
+}
+
+double radToDeg(double rad){
+  return rad*180/M_PI;
 }
