@@ -25,13 +25,13 @@ void ConvexHull::leastSquaresMethod(double* a,double* b){
 
 double ConvexHull::calcWidth(){
   std::vector<double> dis;
-  int n= endIndex - startIndex + 1;
+  int n = endIndex - startIndex + 1;
   double theta,yIntercept;//y = tan(theta)*x + yInterceptに近似
   leastSquaresMethod(&theta,&yIntercept);
  
   for(int i=0;i<n;i++){
     //dis.push_back(std::abs(msg->ranges[i]*(hokuyoSin(i) - hokuyoCos(i)*std::tan(theta)))/std::sqrt(1 + std::tan(theta)*std::tan(theta)));//直線と点との距離
-    dis.push_back(std::abs(msg->ranges[i]*(hokuyoSin(i)*std::cos(theta) - hokuyoCos(i)*std::sin(theta))));
+    dis.push_back(std::abs(msg->ranges[i]*((long double)hokuyoSin(i)*std::cos((long double)theta) - (long double)hokuyoCos(i)*std::sin((long double)theta))));
   }
   
   return *std::max_element(dis.begin(),dis.end()) - *std::min_element(dis.begin(),dis.end());      

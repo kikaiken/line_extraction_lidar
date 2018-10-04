@@ -9,7 +9,10 @@
 
 void lidar_callback(const sensor_msgs::LaserScan::ConstPtr &msg);
 
-bool flag = false;/**/
+void mergeLines(std::list<Line>& lines);
+
+void merge(Line& line1,Line& line2);
+
 
 int main(int argc,char **argv){
 
@@ -18,7 +21,7 @@ int main(int argc,char **argv){
   ros::Publisher marker_pub = nh.advertise<visualization_msgs::Marker>("visualization_marker", 10);
 
   ros::Subscriber lidar = nh.subscribe("scan",1,lidar_callback);
-  ros::Rate loop_rate(10);
+  ros::Rate loop_rate(1);
   
   while(ros::ok()){
     //ROS_INFO("hello world");
@@ -35,11 +38,17 @@ void lidar_callback(const sensor_msgs::LaserScan::ConstPtr &msg){
     ROS_INFO("URG data is empty");
     return;
   } 
+
+  for(int i=0;i<msg->ranges.size();i++){
+    std::cout << msg->ranges[i] << ",";
+  }
+  std::cout << std::endl;
+
   
   ros::NodeHandle nh;
   ros::Publisher marker_pub = nh.advertise<visualization_msgs::Marker>("visualization_marker", 10);
 
-  const double DIS_THRESHOLD = 0.15;/*要検証*/
+  const double DIS_THRESHOLD = 0.05;/*要検証*/
   //const double EPSILON_THETA = 0.05,EPSILON_Y_INTERCEPT = 0.05;
 
   double a,b;
@@ -55,8 +64,9 @@ void lidar_callback(const sensor_msgs::LaserScan::ConstPtr &msg){
     convexHull.leastSquaresMethod(&a,&b);
     
     if(width > DIS_THRESHOLD){
-      std::cout << dp.size() <<"," << a << "," << b << std::endl;
+      //std::cout << dp.size() <<"," << a << "," << b << std::endl;
       lines.push_back(Line(startIndex,i-1,a,b,msg->ranges));
+      //std:: cout << i << "," << lines.end()->dis << std::endl;
       startIndex = i;
       dp.push_back(i);
       convexHull.renew(i,i+1);
@@ -67,6 +77,9 @@ void lidar_callback(const sensor_msgs::LaserScan::ConstPtr &msg){
     dp.push_back(1079);/*最後の点を追加*/
     lines.push_back(Line(startIndex,msg->ranges.size()-1,a,b,msg->ranges));
   }
+
+  /*直線をmerge*/
+  mergeLines(lines);
   
   ROS_INFO("get");
 
@@ -96,7 +109,7 @@ void lidar_callback(const sensor_msgs::LaserScan::ConstPtr &msg){
   }
   marker_pub.publish(points);
   
-  /*直線の描画*/
+  /*凸包の頂点の描画*/
   visualization_msgs::Marker points2;/*直線が切り替わった点*/
   points2.header.frame_id = "/my_frame";
   points2.header.stamp = ros::Time::now();
@@ -122,7 +135,48 @@ void lidar_callback(const sensor_msgs::LaserScan::ConstPtr &msg){
   
   marker_pub.publish(points2);
 
-  ROS_INFO_STREAM("size" << dp.size());
+  /*merge後の頂点を描画*/
+  visualization_msgs::Marker points3;
+  points3.header.frame_id = "/my_frame";
+  points3.header.stamp = ros::Time::now();
+  points3.ns = "segments2";
+  points3.id = 1;
+  points3.type = visualization_msgs::Marker::POINTS;
+  points3.action = visualization_msgs::Marker::ADD;
+  points3.pose.orientation.w = 1.0;
+  points3.scale.x = 0.04;
+  points3.scale.y = 0.04;
+  points3.lifetime = ros::Duration(0);/*再描画するまで残る*/
+  //points are green
+  points3.color.g = 1.0;
+  points3.color.a = 1.0;
+
+
+  for(auto itr=lines.begin();itr!=lines.end();itr++){
+    p.x = itr->startX;
+    p.y = itr->startY;
+    points3.points.push_back(p);
+  }
+  
+  ROS_INFO_STREAM("dp size" << dp.size() << "segments size" << lines.size());
 
 }
 
+void merge(Line& line1,Line& line2){
+  line2.merge(line1);
+}
+
+void mergeLines(std::list<Line>& lines){
+  const static double THETA = 0.2;
+  const static double Y_INTERCEPT = 0.3;
+
+  for(auto itr=lines.begin();itr!=std::prev(lines.end(),1);){
+    if(std::abs(itr->dis - std::next(itr,1)->dis) < THETA && std::abs(itr->dis - std::next(itr,1)->dis) < Y_INTERCEPT){
+      merge(*itr,*std::next(itr,1));
+      itr = lines.erase(itr);
+      continue;
+    }
+    itr++;
+  }
+    
+}
